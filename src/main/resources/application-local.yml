@@ -1,14 +1,17 @@
 spring:
   docker:
     compose:
-      enabled: true
+      enabled: false
       lifecycle-management: start_only
 
   application:
     name: twitter-API-project
 
   datasource:
-    url: jdbc:postgresql://${spring.docker.compose.service.postgres-db.host}:${spring.docker.compose.service.postgres-db.ports[5432]}/${DB_NAME:postgres}
+#    url: jdbc:postgresql://${spring.docker.compose.service.postgres-db.host}:${spring.docker.compose.service.postgres-db.ports[5432]}/${DB_NAME:postgres}
+
+    # без использования docker(пока не изучили докер)
+    url: jdbc:postgresql://localhost:5432/postgres
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
