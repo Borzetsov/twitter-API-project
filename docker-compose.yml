@@ -1,19 +1,44 @@
 services:
-  postgres-db:
-    image: postgres:15-alpine
-    container_name: twitter-API-project
-    env_file:
-      - .env
+  twitter-api-project:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: twitter-api-project
     ports:
-      - "5432:5432"
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    networks:
+      - twitter-api-project-local-network
+
+  database:
+    image: postgres:15-alpine
+    container_name: database
+    #Port is open only for debugging via IntelliJ IDEA DB browser
+    ports:
+      - "5433:5432"
+    env_file:
+      - .env.local
     environment:
-      POSTGRES_DB: ${DB_NAME:-postgres}
-      POSTGRES_USER: ${DB_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+      POSTGRES_DB: ${SPRING_DATASOURCE_NAME:-postgres}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-root}
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    labels:
-      org.springframework.boot.readiness-check.tcp.disable: "true"
+      - database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME:-postgres} -d ${SPRING_DATASOURCE_NAME:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - twitter-api-project-local-network
 
 volumes:
-  pgdata:
+  database_data: { }
+
+networks:
+  twitter-api-project-local-network:
+    driver: bridge
